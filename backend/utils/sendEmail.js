@@ -1,4 +1,4 @@
-import Brevo from "@getbrevo/brevo";
+import * as Brevo from "@getbrevo/brevo";
 
 const sendEmail = async (to, subject, html) => {
   try {
@@ -19,7 +19,7 @@ const sendEmail = async (to, subject, html) => {
       htmlContent: html,
     });
 
-    console.log("✅ Email sent successfully ");
+    console.log("✅ Email sent successfully via Brevo API");
   } catch (error) {
     console.error("❌ EMAIL ERROR 👉", error);
     throw error;
