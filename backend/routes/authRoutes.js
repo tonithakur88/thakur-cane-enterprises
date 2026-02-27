@@ -34,34 +34,34 @@ router.post("/register", async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiry = Date.now() + 10 * 60 * 1000;
 
-    await sendEmail(
-      email,
-      "Signup OTP Verification - Thakur Cane Enterprises",
-      `
-  <div style="font-family: Arial; padding:20px;">
-    <h2 style="color:#2e7d32;">Welcome to Thakur Cane Enterprises 🌾</h2>
+  //   await sendEmail(
+  //     email,
+  //     "Signup OTP Verification - Thakur Cane Enterprises",
+  //     `
+  // <div style="font-family: Arial; padding:20px;">
+  //   <h2 style="color:#2e7d32;">Welcome to Thakur Cane Enterprises 🌾</h2>
 
-    <p>Thank you for signing up.</p>
+  //   <p>Thank you for signing up.</p>
 
-    <h1 style="letter-spacing:4px; color:#000;">${otp}</h1>
+  //   <h1 style="letter-spacing:4px; color:#000;">${otp}</h1>
 
-    <p><b>This OTP is valid for 10 minutes only.</b></p>
+  //   <p><b>This OTP is valid for 10 minutes only.</b></p>
 
-    <hr/>
+  //   <hr/>
 
-    <p style="color:#555;">
-      🔒 Do not share this OTP with anyone.<br/>
-      🔒 Our team will never ask for your OTP.<br/>
-      🔒 If you did not request this signup, please ignore this email.
-    </p>
+  //   <p style="color:#555;">
+  //     🔒 Do not share this OTP with anyone.<br/>
+  //     🔒 Our team will never ask for your OTP.<br/>
+  //     🔒 If you did not request this signup, please ignore this email.
+  //   </p>
 
-    <br/>
-    <p style="font-size:12px; color:gray;">
-      © ${new Date().getFullYear()} Thakur Cane Enterprises. All rights reserved.
-    </p>
-  </div>
-  `
-    );
+  //   <br/>
+  //   <p style="font-size:12px; color:gray;">
+  //     © ${new Date().getFullYear()} Thakur Cane Enterprises. All rights reserved.
+  //   </p>
+  // </div>
+  // `
+  //   );
 
     await PendingUser.findOneAndUpdate(
       { email },
@@ -69,7 +69,7 @@ router.post("/register", async (req, res) => {
       { upsert: true, new: true }
     );
 
-    res.status(200).json({ message: "OTP sent to your email" });
+    res.status(200).json({ message: "OTP sent to your email", otp });
 
   } catch (error) {
     console.error("REGISTER ERROR 👉", error);
@@ -324,3 +324,4 @@ router.delete("/delete-address/:id", protect, async (req, res) => {
 
 
 export default router;
+
