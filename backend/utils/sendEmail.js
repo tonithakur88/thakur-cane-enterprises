@@ -1,33 +1,25 @@
-import * as SibApiV3Sdk from "@getbrevo/brevo";
+import Brevo from "@getbrevo/brevo";
 
 const sendEmail = async (to, subject, html) => {
   try {
-    const client = SibApiV3Sdk.ApiClient.instance;
+    const apiInstance = new Brevo.TransactionalEmailsApi();
 
-    const apiKey = client.authentications["api-key"];
-    apiKey.apiKey = process.env.BREVO_API_KEY;
+    apiInstance.setApiKey(
+      Brevo.TransactionalEmailsApiApiKeys.apiKey,
+      process.env.BREVO_API_KEY
+    );
 
-    const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
-
-    const sender = {
-      email: "riverengineering96@gmail.com",
-      name: "Thakur Cane Enterprises",
-    };
-
-    const receivers = [
-      {
-        email: to,
+    await apiInstance.sendTransacEmail({
+      sender: {
+        email: "riverengineering96@gmail.com",
+        name: "Thakur Cane Enterprises",
       },
-    ];
-
-    await tranEmailApi.sendTransacEmail({
-      sender,
-      to: receivers,
-      subject,
+      to: [{ email: to }],
+      subject: subject,
       htmlContent: html,
     });
 
-    console.log("✅ Email sent successfully");
+    console.log("✅ Email sent successfully ");
   } catch (error) {
     console.error("❌ EMAIL ERROR 👉", error);
     throw error;
@@ -35,6 +27,3 @@ const sendEmail = async (to, subject, html) => {
 };
 
 export default sendEmail;
-
-
-
