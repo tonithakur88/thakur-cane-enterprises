@@ -19,8 +19,8 @@ const VerifyOTP = () => {
 
       let url =
         type === "login"
-          ? "/auth/verify-login-otp"
-          : "/auth/verify-otp";
+          ? "/api/auth/verify-login-otp"
+          : "/api/auth/verify-otp";
 
       const res = await API.post(url, {
         email,
@@ -64,3 +64,4 @@ const VerifyOTP = () => {
 };
 
 export default VerifyOTP;
+
