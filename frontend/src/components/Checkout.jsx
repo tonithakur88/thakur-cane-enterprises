@@ -15,7 +15,7 @@ const Checkout = () => {
 
   const fetchCart = async () => {
     const { data } = await API.get(
-      "/cart",
+      "/api/cart",
       { headers: { Authorization: `Bearer ${token}` } }
     );
     setCart(data);
@@ -23,7 +23,7 @@ const Checkout = () => {
 
   const fetchAddresses = async () => {
     const { data } = await API.get(
-      "/auth/my-addresses",
+      "/api/auth/my-addresses",
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -57,7 +57,7 @@ const Checkout = () => {
     await loadRazorpay();
 
     const { data } = await API.post(
-      "/orders/create-order",
+      "/api/orders/create-order",
       { amount: totalAmount },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -69,7 +69,7 @@ const Checkout = () => {
       order_id: data.id,
       handler: async function (response) {
         await API.post(
-          "/orders/verify",
+          "/api/orders/verify",
           {
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
@@ -86,7 +86,7 @@ const Checkout = () => {
         );
 
         await API.delete(
-          "/cart/clear",
+          "/api/cart/clear",
           { headers: { Authorization: `Bearer ${token}` } }
         );
 

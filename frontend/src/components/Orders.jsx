@@ -17,7 +17,7 @@ const Orders = () => {
       const token = localStorage.getItem("token");
 
       const { data } = await API.get(
-        "/orders/my-orders",
+        "/api/orders/my-orders",
         {
           headers: {
             Authorization: `Bearer ${token}`,

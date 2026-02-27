@@ -21,7 +21,7 @@ const Cart = () => {
 
     try {
       const { data } = await API.get(
-        "/cart",
+        "/api/cart",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCart(data);
@@ -47,7 +47,7 @@ const Cart = () => {
       if (qty < 0) return; // allow 0
 
       await API.put(
-        "/cart/update",
+        "/api/cart/update",
         { productId, qty },
         { headers: { Authorization: `Bearer ${token}` } }
       );

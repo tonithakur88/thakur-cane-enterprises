@@ -11,7 +11,7 @@ const AdminOrders = () => {
     const token = localStorage.getItem("adminToken");
 
     const res = await API.get(
-      "/orders",
+      "/api/orders",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -31,7 +31,7 @@ const AdminOrders = () => {
     const token = localStorage.getItem("adminToken");
 
     await API.put(
-      `/orders/${id}`,
+      `/api/orders/${id}`,
       { status },
       {
         headers: {

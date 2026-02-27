@@ -28,7 +28,7 @@ const Signup = () => {
 
     try {
       const { data } = await API.post(
-        "/auth/register",
+        "/api/auth/register",
         {
           name,
           lastName,

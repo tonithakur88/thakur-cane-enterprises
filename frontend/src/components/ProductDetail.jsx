@@ -14,7 +14,7 @@ const ProductDetail = () => {
   const fetchProduct = useCallback(async () => {
     try {
       const { data } = await API.get(
-        `/products/${id}`
+        `/api/products/${id}`
       );
       setProduct(data);
       setSelectedImage(data.image || (data.images && data.images[0]));
@@ -29,7 +29,7 @@ const ProductDetail = () => {
       if (!token) return;
 
       const { data } = await API.get(
-        "/cart",
+        "/api/cart",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ const ProductDetail = () => {
       }
 
       await API.post(
-        "/cart/add",
+        "/api/cart/add",
         {
           productId: product._id,
           qty,

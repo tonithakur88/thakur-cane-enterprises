@@ -24,7 +24,7 @@ const Admin = () => {
 
   const fetchProducts = async () => {
     const { data } = await API.get(
-      "/products"
+      "/api/products"
     );
     setProducts(data);
   };
@@ -70,7 +70,7 @@ const Admin = () => {
 
     try {
       await API.post(
-        "/products",
+        "/api/products",
         formData,
         {
           headers: {
@@ -105,7 +105,7 @@ const Admin = () => {
   const deleteProduct = async (id) => {
     try {
       await API.delete(
-        `/products/${id}`,
+        `/api/products/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -121,7 +121,7 @@ const Admin = () => {
   const updateStock = async (id) => {
     try {
       await API.put(
-        `/products/update-stock/${id}`,
+        `/api/products/update-stock/${id}`,
         { stock: stockValues[id] },
         {
           headers: {

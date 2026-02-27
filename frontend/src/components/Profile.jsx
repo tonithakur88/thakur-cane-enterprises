@@ -28,7 +28,7 @@ const Profile = () => {
   }, []);
 
   const fetchProfile = async () => {
-    const res = await API.get("/auth/profile", {
+    const res = await API.get("/api/auth/profile", {
       headers: { Authorization: `Bearer ${token}` },
     });
     setUser(res.data);
@@ -36,21 +36,21 @@ const Profile = () => {
   };
 
   const fetchAddresses = async () => {
-    const res = await API.get("/address", {
+    const res = await API.get("/api/address", {
       headers: { Authorization: `Bearer ${token}` },
     });
     setAddresses(res.data);
   };
 
   const updateProfile = async () => {
-    await API.put("/auth/update-profile", formData, {
+    await API.put("/api/auth/update-profile", formData, {
       headers: { Authorization: `Bearer ${token}` },
     });
     alert("Profile updated");
   };
 
   const changePassword = async () => {
-    await API.put("/auth/change-password", passwordData, {
+    await API.put("/api/auth/change-password", passwordData, {
       headers: { Authorization: `Bearer ${token}` },
     });
     alert("Password changed");
@@ -59,7 +59,7 @@ const Profile = () => {
   const addAddress = async () => {
     try {
       const res = await  API.post(
-        "/address",
+        "/api/address",
         newAddress,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -76,7 +76,7 @@ const Profile = () => {
   };
 
   const deleteAddress = async (id) => {
-    await API.delete(`/auth/delete-address/${id}`, {
+    await API.delete(`/api/auth/delete-address/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     fetchAddresses();
