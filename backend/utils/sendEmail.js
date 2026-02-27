@@ -5,8 +5,7 @@ export const sendEmail = async (to, subject, html) => {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
-      secure: false,
-      requireTLS: true,
+      secure: true,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.BREVO_API_KEY, // SMTP KEY
@@ -27,4 +26,5 @@ export const sendEmail = async (to, subject, html) => {
     throw error;
   }
 };
+
 
