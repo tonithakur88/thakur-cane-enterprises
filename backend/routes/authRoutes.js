@@ -5,7 +5,7 @@ import { protect } from "../middleware/authMiddleware.js";
 import PendingUser from "../models/PendingUser.js";
 import User from "../models/User.js";
 import Address from "../models/Address.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import sendEmail from "../utils/sendEmail.js";
 
 const router = express.Router();
 
@@ -324,5 +324,6 @@ router.delete("/delete-address/:id", protect, async (req, res) => {
 
 
 export default router;
+
 
 
