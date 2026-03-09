@@ -288,7 +288,7 @@ const Orders = () => {
                             );
 
                           const res = await fetch(
-                            `/orders/cancel/${order._id}`,
+                            `/api/orders/cancel/${order._id}`,
                             {
                               method: "PUT",
                               headers: {
@@ -380,3 +380,4 @@ const Orders = () => {
 };
 
 export default Orders;
+
