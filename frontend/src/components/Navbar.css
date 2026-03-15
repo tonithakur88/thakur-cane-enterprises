@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* .navbar {
   display: flex;
   justify-content: space-between;
@@ -25,3 +26,32 @@
 .nav-links button:hover {
   text-decoration: underline;
 } */
+=======
+/* .navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: #2c2c2c;
+}
+
+.logo {
+  color: #fff;
+}
+
+.nav-links a,
+.nav-links button {
+  margin-left: 15px;
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.nav-links a:hover,
+.nav-links button:hover {
+  text-decoration: underline;
+} */
+>>>>>>> 00f8281ee8d9b73c8ba973b193294f36d4283ebb
