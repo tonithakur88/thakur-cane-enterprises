@@ -4,42 +4,42 @@ import { useNavigate } from "react-router-dom";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await API.get(
-          "/api/products"
-        );
+        const { data } = await API.get("/api/products");
         setProducts(data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("Failed to load products.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProducts();
   }, []);
 
-  // ⚠️ Existing cart logic untouched (future safe)
-  // const addToCart = (product) => {
-  //   if (product.status !== "active" || product.stock === 0) return;
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px" }}>
+        <h3>Loading products...</h3>
+      </div>
+    );
+  }
 
-  //   const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
-
-  //   const itemIndex = existingCart.findIndex(
-  //     (item) => item._id === product._id
-  //   );
-
-  //   if (itemIndex > -1) {
-  //     existingCart[itemIndex].qty += 1;
-  //   } else {
-  //     existingCart.push({ ...product, qty: 1 });
-  //   }
-
-  //   localStorage.setItem("cart", JSON.stringify(existingCart));
-  //   alert("Added to cart ✅");
-  // };
+  if (error) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px", color: "red" }}>
+        <h3>{error}</h3>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "40px" }}>
@@ -72,12 +72,26 @@ const Products = () => {
                 borderRadius: "15px",
                 boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
                 cursor: isActive ? "pointer" : "default",
-                transition: "0.3s",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-5px)";
+                e.currentTarget.style.boxShadow =
+                  "0 10px 25px rgba(0,0,0,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 5px 15px rgba(0,0,0,0.08)";
               }}
             >
               <img
                 src={product.image}
                 alt={product.name}
+                onError={(e) =>
+                  (e.target.src =
+                    "https://via.placeholder.com/300x200?text=No+Image")
+                }
                 style={{
                   width: "100%",
                   height: "200px",
@@ -101,7 +115,6 @@ const Products = () => {
                 </p>
               )}
 
-              {/* STOCK WARNINGS */}
               {outOfStock && (
                 <p style={{ color: "red", fontWeight: "bold" }}>
                   Out of Stock

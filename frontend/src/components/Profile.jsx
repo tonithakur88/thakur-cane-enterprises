@@ -1,257 +1,271 @@
-// FULL PROFESSIONAL DASHBOARD VERSION
-// (Large code – safe copy paste)
+import React, { useEffect, useState } from "react"; 
+import API from "../api"; 
+import { useNavigate } from "react-router-dom"; 
+import { useCallback } from "react";
 
-import React, { useEffect, useState } from "react";
-import API from "../api";
-import { useNavigate } from "react-router-dom";
+const Profile = () => { 
+  const navigate = useNavigate(); 
+  const token = localStorage.getItem("token"); 
 
-const Profile = () => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const [user, setUser] = useState(null); 
+  const [addresses, setAddresses] = useState([]); 
+  const [activeTab, setActiveTab] = useState("profile"); 
+  const [showForm, setShowForm] = useState(false); 
+  const [newAddress, setNewAddress] = useState({}); 
+  const [formData, setFormData] = useState({}); 
+  const [passwordData, setPasswordData] = useState({}); 
 
-  const [user, setUser] = useState(null);
-  const [addresses, setAddresses] = useState([]);
-  const [activeTab, setActiveTab] = useState("profile");
-  const [showForm, setShowForm] = useState(false);
-  const [newAddress, setNewAddress] = useState({});
-  const [formData, setFormData] = useState({});
-  const [passwordData, setPasswordData] = useState({});
+ // ✅ FIRST define functions
+const fetchProfile = useCallback(async () => { 
+  const res = await API.get("/api/auth/profile", { 
+    headers: { Authorization: `Bearer ${token}` }, 
+  }); 
+  setUser(res.data); 
+  setFormData(res.data); 
+}, [token]);
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+const fetchAddresses = useCallback(async () => { 
+  const res = await API.get("/api/address", { 
+    headers: { Authorization: `Bearer ${token}` }, 
+  }); 
+  setAddresses(res.data); 
+}, [token]);
 
-    fetchProfile();
-    fetchAddresses();
-  }, []);
+// ✅ THEN useEffect
+useEffect(() => { 
+  if (!token) { 
+    navigate("/login"); 
+    return; 
+  } 
+  fetchProfile(); 
+  fetchAddresses(); 
+}, [token, navigate, fetchProfile, fetchAddresses]);
 
-  const fetchProfile = async () => {
-    const res = await API.get("/api/auth/profile", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setUser(res.data);
-    setFormData(res.data);
-  };
 
-  const fetchAddresses = async () => {
-    const res = await API.get("/api/address", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setAddresses(res.data);
-  };
+  const updateProfile = async () => { 
+    await API.put("/api/auth/update-profile", formData, { 
+      headers: { Authorization: `Bearer ${token}` }, 
+    }); 
+    alert("Profile updated"); 
+  }; 
 
-  const updateProfile = async () => {
-    await API.put("/api/auth/update-profile", formData, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    alert("Profile updated");
-  };
+  const changePassword = async () => { 
+    await API.put("/api/auth/change-password", passwordData, { 
+      headers: { Authorization: `Bearer ${token}` }, 
+    }); 
+    alert("Password changed"); 
+  }; 
 
-  const changePassword = async () => {
-    await API.put("/api/auth/change-password", passwordData, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    alert("Password changed");
-  };
+  const addAddress = async () => { 
+    try { 
+      const res = await API.post( 
+        "/api/address", 
+        newAddress, 
+        { headers: { Authorization: `Bearer ${token}` } } 
+      ); 
+      console.log(res.data); // should show address object 
+      setShowForm(false); 
+      setNewAddress({}); 
+      fetchAddresses(); 
+    } catch (err) { 
+      console.log(err.response?.data); 
+    } 
+  }; 
 
-  const addAddress = async () => {
-    try {
-      const res = await  API.post(
-        "/api/address",
-        newAddress,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+ async function deleteAddress(id) {
+  await API.delete(`/api/auth/delete-address/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  fetchAddresses();
+}
 
-      console.log(res.data); // should show address object
+  const logout = () => { 
+    localStorage.removeItem("token"); 
+    navigate("/"); 
+  }; 
 
-      setShowForm(false);
-      setNewAddress({});
-      fetchAddresses();
+  if (!user) return <div style={{ padding: 50 }}>Loading...</div>; 
 
-    } catch (err) {
-      console.log(err.response?.data);
-    }
-  };
+  return ( 
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f4f6f9" }}> 
 
-  const deleteAddress = async (id) => {
-    await API.delete(`/api/auth/delete-address/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    fetchAddresses();
-  };
+      {/* Sidebar */} 
+      <div style={{ width: 250, background: "#111", color: "#fff", padding: 30 }}> 
+        <h3>My Account</h3> 
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
-  };
+        <button onClick={() => setActiveTab("profile")} style={btn}> 
+          Profile Info 
+        </button> 
 
-  if (!user) return <div style={{ padding: 50 }}>Loading...</div>;
+        <button onClick={() => setActiveTab("password")} style={btn}> 
+          Change Password 
+        </button> 
 
-  return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f4f6f9" }}>
-      {/* Sidebar */}
-      <div style={{ width: 250, background: "#111", color: "#fff", padding: 30 }}>
-        <h3>My Account</h3>
+        <button onClick={() => setActiveTab("address")} style={btn}> 
+          Manage Addresses 
+        </button> 
 
-        <button onClick={() => setActiveTab("profile")} style={btn}>
-          Profile Info
-        </button>
+        <button onClick={() => navigate("/orders")} style={btn}> 
+          My Orders 
+        </button> 
 
-        <button onClick={() => setActiveTab("password")} style={btn}>
-          Change Password
-        </button>
+        <button onClick={logout} style={{ ...btn, background: "#e74c3c" }}> 
+          Logout 
+        </button> 
+      </div> 
 
-        <button onClick={() => setActiveTab("address")} style={btn}>
-          Manage Addresses
-        </button>
+      {/* Content */} 
+      <div style={{ flex: 1, padding: 50 }}> 
 
-        <button onClick={() => navigate("/orders")} style={btn}>
-          My Orders
-        </button>
+        {activeTab === "profile" && ( 
+          <> 
+            <h2>Edit Profile</h2> 
 
-        <button onClick={logout} style={{ ...btn, background: "#e74c3c" }}>
-          Logout
-        </button>
-      </div>
+            <input 
+              value={formData.name || ""} 
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+              placeholder="First Name" 
+            /> 
+            <br /><br /> 
 
-      {/* Content */}
-      <div style={{ flex: 1, padding: 50 }}>
-        {activeTab === "profile" && (
-          <>
-            <h2>Edit Profile</h2>
-            <input value={formData.name || ""} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="First Name" />
-            <br /><br />
-            <input value={formData.lastName || ""} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} placeholder="Last Name" />
-            <br /><br />
-            <input value={formData.phone || ""} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="Phone" />
-            <br /><br />
-            <button onClick={updateProfile}>Save Changes</button>
-          </>
-        )}
+            <input 
+              value={formData.lastName || ""} 
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
+              placeholder="Last Name" 
+            /> 
+            <br /><br /> 
 
-        {activeTab === "password" && (
-          <>
-            <h2>Change Password</h2>
-            <input type="password" placeholder="Current Password"
-              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} />
-            <br /><br />
-            <input type="password" placeholder="New Password"
-              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} />
-            <br /><br />
-            <button onClick={changePassword}>Update Password</button>
-          </>
-        )}
+            <input 
+              value={formData.phone || ""} 
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
+              placeholder="Phone" 
+            /> 
+            <br /><br /> 
 
-        {activeTab === "address" && (
-          <>
-            <h2>Saved Addresses</h2>
+            <button onClick={updateProfile}>Save Changes</button> 
+          </> 
+        )} 
 
-            {/* ✅ ADD ADDRESS BUTTON */}
-            <button
-              onClick={() => setShowForm(!showForm)}
-              style={{
-                padding: "8px 15px",
-                background: "#111",
-                color: "#fff",
-                border: "none",
-                marginBottom: "20px",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              {showForm ? "Close Form" : "Add New Address"}
-            </button>
+        {activeTab === "password" && ( 
+          <> 
+            <h2>Change Password</h2> 
 
-            {/* ✅ ADDRESS FORM */}
-            {showForm && (
-              <div style={{ background: "#fff", padding: 20, marginBottom: 20 }}>
-                <input
-                  placeholder="Full Name"
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, fullName: e.target.value })
-                  }
-                /><br /><br />
+            <input 
+              type="password" 
+              placeholder="Current Password" 
+              onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} 
+            /> 
+            <br /><br /> 
 
-                <input
-                  placeholder="Phone"
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, phone: e.target.value })
-                  }
-                /><br /><br />
+            <input 
+              type="password" 
+              placeholder="New Password" 
+              onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} 
+            /> 
+            <br /><br /> 
 
-                <input
-                  placeholder="Address Line"
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, house: e.target.value })
-                  }
-                /><br /><br />
+            <button onClick={changePassword}>Update Password</button> 
+          </> 
+        )} 
 
-                <input
-                  placeholder="City"
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, city: e.target.value })
-                  }
-                /><br /><br />
+        {activeTab === "address" && ( 
+          <> 
+            <h2>Saved Addresses</h2> 
 
-                <input
-                  placeholder="State"
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, state: e.target.value })
-                  }
-                /><br /><br />
+            {/* ✅ ADD ADDRESS BUTTON */} 
+            <button 
+              onClick={() => setShowForm(!showForm)} 
+              style={{ 
+                padding: "8px 15px", 
+                background: "#111", 
+                color: "#fff", 
+                border: "none", 
+                marginBottom: "20px", 
+                borderRadius: "5px", 
+                cursor: "pointer", 
+              }} 
+            > 
+              {showForm ? "Close Form" : "Add New Address"} 
+            </button> 
 
-                <input
-                  placeholder="Pincode"
-                  onChange={(e) =>
-                    setNewAddress({ ...newAddress, pincode: e.target.value })
-                  }
-                /><br /><br />
+            {/* ✅ ADDRESS FORM */} 
+            {showForm && ( 
+              <div style={{ background: "#fff", padding: 20, marginBottom: 20 }}> 
 
-                <button onClick={addAddress}>Save Address</button>
-              </div>
-            )}
+                <input 
+                  placeholder="Full Name" 
+                  onChange={(e) => setNewAddress({ ...newAddress, fullName: e.target.value }) } 
+                /><br /><br /> 
 
-            {/* ✅ ADDRESS LIST */}
-            {addresses.map((addr) => (
-              <div
-                key={addr._id}
-                style={{
-                  background: "#fff",
-                  padding: 20,
-                  marginBottom: 15,
-                  borderRadius: 8,
-                }}
-              >
-                <p>{addr.fullName}</p>
-                <p>{addr.phone}</p>
-                <p>
-                  {addr.addressLine}, {addr.city}, {addr.state} - {addr.pincode}
-                </p>
+                <input 
+                  placeholder="Phone" 
+                  onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value }) } 
+                /><br /><br /> 
 
-                <button onClick={() => deleteAddress(addr._id)}>
-                  Delete
-                </button>
-              </div>
-            ))}
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
+                <input 
+                  placeholder="Address Line" 
+                  onChange={(e) => setNewAddress({ ...newAddress, house: e.target.value }) } 
+                /><br /><br /> 
 
-const btn = {
-  display: "block",
-  width: "100%",
-  margin: "10px 0",
-  padding: "10px",
-  background: "transparent",
-  color: "#fff",
-  border: "none",
-  textAlign: "left",
-  cursor: "pointer"
-};
+                <input 
+                  placeholder="City" 
+                  onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value }) } 
+                /><br /><br /> 
+
+                <input 
+                  placeholder="State" 
+                  onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value }) } 
+                /><br /><br /> 
+
+                <input 
+                  placeholder="Pincode" 
+                  onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value }) } 
+                /><br /><br /> 
+
+                <button onClick={addAddress}>Save Address</button> 
+              </div> 
+            )} 
+
+            {/* ✅ ADDRESS LIST */} 
+            {addresses.map((addr) => ( 
+              <div 
+                key={addr._id} 
+                style={{ 
+                  background: "#fff", 
+                  padding: 20, 
+                  marginBottom: 15, 
+                  borderRadius: 8, 
+                }} 
+              > 
+                <p>{addr.fullName}</p> 
+                <p>{addr.phone}</p> 
+                <p> 
+                  {addr.addressLine}, {addr.city}, {addr.state} - {addr.pincode} 
+                </p> 
+
+                <button onClick={() => deleteAddress(addr._id)}> 
+                  Delete 
+                </button> 
+              </div> 
+            ))} 
+          </> 
+        )} 
+
+      </div> 
+    </div> 
+  ); 
+}; 
+
+const btn = { 
+  display: "block", 
+  width: "100%", 
+  margin: "10px 0", 
+  padding: "10px", 
+  background: "transparent", 
+  color: "#fff", 
+  border: "none", 
+  textAlign: "left", 
+  cursor: "pointer" 
+}; 
 
 export default Profile;

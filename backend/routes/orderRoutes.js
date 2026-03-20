@@ -97,41 +97,41 @@ router.post("/verify", protect, async (req, res) => {
 
     for (let item of items) {
 
-  const product = await Product.findById(item.productId);
+      const product = await Product.findById(item.productId);
 
-  if (!product) {
-    return res.status(404).json({ message: "Product not found" });
-  }
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
 
-  await Order.create({
-    user: req.user.id,
-    items: [
-      {
-        product: product._id,
-        name: product.name,
-        image: product.image,   // ✅ Cloudinary image yahi se aayegi
-        price: product.price,
-        quantity: Number(item.qty),
-      },
-    ],
-    totalAmount: product.price * Number(item.qty),
-    paymentId: razorpay_payment_id,
-    status: "Placed",
-    address: {
-      fullName: address?.fullName,
-      phone: address?.phone,
-      addressLine: address?.house,
-      landmark: address?.landmark || "",
-      city: address?.city,
-      state: address?.state,
-      pincode: address?.pincode,
-    },
-  });
+      await Order.create({
+        user: req.user.id,
+        items: [
+          {
+            product: product._id,
+            name: product.name,
+            image: product.image,   // ✅ Cloudinary image yahi se aayegi
+            price: product.price,
+            quantity: Number(item.qty),
+          },
+        ],
+        totalAmount: product.price * Number(item.qty),
+        paymentId: razorpay_payment_id,
+        status: "Placed",
+        address: {
+          fullName: address?.fullName,
+          phone: address?.phone,
+          addressLine: address?.house,
+          landmark: address?.landmark || "",
+          city: address?.city,
+          state: address?.state,
+          pincode: address?.pincode,
+        },
+      });
 
-  // stock reduce yahi kar do
-  product.stock -= item.qty;
-  await product.save();
-}
+      // stock reduce yahi kar do
+      product.stock -= item.qty;
+      await product.save();
+    }
 
     res.json({ success: true });
 
@@ -288,19 +288,24 @@ router.get("/invoice/:id", protect, async (req, res) => {
 router.get("/", protect, async (req, res) => {
   try {
 
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin only access" });
+    // 🔥 ADMIN → ALL ORDERS
+    if (req.user.role === "admin") {
+      const orders = await Order.find()
+        .populate("user", "name email")
+        .sort({ createdAt: -1 });
+
+      return res.json(orders);
     }
 
-    const orders = await Order.find()
-      .populate("user", "name email")
+    // 👤 USER → ONLY HIS ORDERS
+    const orders = await Order.find({ user: req.user._id })
       .sort({ createdAt: -1 });
 
     res.json(orders);
 
   } catch (error) {
-    console.error("Admin Orders Error:", error);
-    res.status(500).json({ message: "Error fetching all orders" });
+    console.error("Orders Fetch Error:", error);
+    res.status(500).json({ message: "Error fetching orders" });
   }
 });
 
@@ -334,11 +339,11 @@ router.put("/:id", protect, async (req, res) => {
     }
 
     // 🚨 BLOCK IF CANCELLED OR DELIVERED
-if (order.status === "Cancelled" || order.status === "Delivered") {
-  return res.status(400).json({
-    message: "Finalized order cannot be updated",
-  });
-}
+    if (order.status === "Cancelled" || order.status === "Delivered") {
+      return res.status(400).json({
+        message: "Finalized order cannot be updated",
+      });
+    }
 
     order.status = status;
     await order.save();

@@ -16,7 +16,7 @@ import AdminLogin from "./components/AdminLogin";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminOrders from "./components/AdminOrders";
 import Checkout from "./components/Checkout";
-
+import ForgotPassword from "./components/ForgotPassword";
 
 function Layout() {
   const location = useLocation();
@@ -34,6 +34,7 @@ function Layout() {
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-otp" element={<VerifyOTP />} />
         <Route path="/profile" element={<Profile />} />

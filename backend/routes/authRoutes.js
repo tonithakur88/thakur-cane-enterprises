@@ -322,6 +322,109 @@ router.delete("/delete-address/:id", protect, async (req, res) => {
 });
 
 
+/* ================= FORGOT PASSWORD ================= */
+
+router.post("/forgot-password", async (req,res)=>{
+
+  try{
+
+    const {email} = req.body;
+
+    const user = await User.findOne({email});
+
+    if(!user){
+      return res.status(400).json({message:"User not found"});
+    }
+
+    const otp = Math.floor(100000 + Math.random()*900000).toString();
+
+    user.resetOtp = otp;
+    user.resetOtpExpiry = Date.now() + 10*60*1000;
+
+    await user.save();
+
+    await sendEmail(
+      email,
+      "Password Reset OTP",
+      `<h2>Your OTP: ${otp}</h2>`
+    );
+
+    res.json({message:"OTP sent"});
+
+  }catch{
+
+    res.status(500).json({message:"Server error"});
+
+  }
+
+});
+
+
+router.post("/reset-password", async (req,res)=>{
+
+  try{
+
+    let {email,otp,newPassword} = req.body;
+
+    otp = otp.toString().trim(); // ✅ FIX
+
+    const user = await User.findOne({email});
+
+    if(!user){
+      return res.status(400).json({message:"User not found"});
+    }
+
+    if(!user.resetOtp || user.resetOtp.toString().trim() !== otp){
+      return res.status(400).json({message:"Invalid OTP"});
+    }
+
+    if(user.resetOtpExpiry < Date.now()){
+      return res.status(400).json({message:"OTP expired"});
+    }
+
+    user.password = newPassword;
+
+    user.resetOtp = null;
+    user.resetOtpExpiry = null;
+
+    await user.save();
+
+    res.json({message:"Password reset successful"});
+
+  }catch{
+
+    res.status(500).json({message:"Server error"});
+
+  }
+
+});
+
+router.get("/create-admin-easy", async (req, res) => {
+  try {
+    const email = "admin@gmail.com";
+
+    const adminExists = await User.findOne({ email });
+
+    if (adminExists) {
+      return res.send("Admin already exists ✅");
+    }
+
+    const admin = await User.create({
+      name: "Admin",
+      email: "admin@gmail.com",
+      password: "123456",
+      phone: "9999999999",
+      role: "admin",
+    });
+
+    res.send("Admin created successfully ✅");
+
+  } catch (error) {
+    console.error(error);
+    res.send("Error creating admin ❌");
+  }
+});
+
 
 export default router;
 
