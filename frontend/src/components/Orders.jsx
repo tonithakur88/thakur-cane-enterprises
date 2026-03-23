@@ -4,7 +4,6 @@ import API from "../api";
 const statusSteps = [
   "Placed",
   "Shipped",
-  "Arrived at Hub",
   "Out for Delivery",
   "Delivered",
 ];

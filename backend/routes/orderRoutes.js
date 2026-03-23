@@ -6,6 +6,8 @@ import Order from "../models/Order.js";
 import PDFDocument from "pdfkit";
 import Address from "../models/Address.js";
 import { protect } from "../middleware/authMiddleware.js";
+import sendEmail from "../utils/sendEmail.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 
@@ -131,6 +133,70 @@ router.post("/verify", protect, async (req, res) => {
       // stock reduce yahi kar do
       product.stock -= item.qty;
       await product.save();
+    }
+
+    // ================= SEND ORDER EMAIL =================
+    try {
+      const user = await User.findById(req.user.id);
+
+      if (user) {
+
+        const productListHTML = items.map(item => `
+      <tr>
+        <td style="padding:8px;border:1px solid #ddd;">${item.name}</td>
+        <td style="padding:8px;border:1px solid #ddd;">${item.qty}</td>
+        <td style="padding:8px;border:1px solid #ddd;">₹${item.price}</td>
+        <td style="padding:8px;border:1px solid #ddd;">₹${item.price * item.qty}</td>
+      </tr>
+    `).join("");
+
+        const html = `
+    <div style="font-family:Arial; padding:20px;">
+      <h2 style="color:#2e7d32;">🛒 New Order Received</h2>
+
+      <h3>Customer Details</h3>
+      <p><b>Name:</b> ${user.name} ${user.lastName || ""}</p>
+      <p><b>Email:</b> ${user.email}</p>
+      <p><b>Phone:</b> ${user.phone}</p>
+
+      <h3>Shipping Address</h3>
+      <p>
+            ${address?.fullName || ""}<br/>
+            ${address?.addressLine || address?.house || ""}<br/>
+            ${address?.city || ""}, ${address?.state || ""} - ${address?.pincode || ""}
+      </p>
+
+      <h3>Order Details</h3>
+      <table style="border-collapse:collapse;width:100%;">
+        <tr>
+          <th style="padding:8px;border:1px solid #ddd;">Product</th>
+          <th style="padding:8px;border:1px solid #ddd;">Qty</th>
+          <th style="padding:8px;border:1px solid #ddd;">Price</th>
+          <th style="padding:8px;border:1px solid #ddd;">Total</th>
+        </tr>
+        ${productListHTML}
+      </table>
+
+      <h2 style="text-align:right;">Total: ₹${totalAmount}</h2>
+
+      <hr/>
+      <p style="font-size:12px;color:gray;">
+        Order ID: ${razorpay_order_id}<br/>
+        Payment ID: ${razorpay_payment_id}
+      </p>
+    </div>
+    `;
+
+        const adminEmail = process.env.ADMIN_EMAIL || "riverengineering96@gmail.com";
+
+        await sendEmail(
+          adminEmail,
+          "New Order Received 🛒",
+          html
+        );
+      }
+    } catch (err) {
+      console.error("Order Email Error:", err.message);
     }
 
     res.json({ success: true });
@@ -323,7 +389,6 @@ router.put("/:id", protect, async (req, res) => {
     const validStatuses = [
       "Placed",
       "Shipped",
-      "Arrived at Hub",
       "Out for Delivery",
       "Delivered",
     ];

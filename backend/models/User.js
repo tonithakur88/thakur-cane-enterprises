@@ -62,6 +62,20 @@ const userSchema = new mongoose.Schema(
       type: Number,
     },
 
+    // ✅ ADD THIS BLOCK
+    deleteRequested: {
+      type: Boolean,
+      default: false,
+    },
+
+    deleteRequestedAt: {
+      type: Date,
+    },
+
+    deleteScheduledAt: {
+      type: Date,
+    },
+
   },
   { timestamps: true }
 );

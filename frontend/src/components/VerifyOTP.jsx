@@ -31,7 +31,6 @@ const VerifyOTP = () => {
       });
 
       if (type === "login") {
-
         localStorage.setItem("token", res.data.token);
         navigate("/");
 

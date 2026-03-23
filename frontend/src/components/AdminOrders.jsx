@@ -10,6 +10,11 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     const token = localStorage.getItem("adminToken");
 
+    if (!token) {
+      alert("Admin not logged in");
+      return;
+    }
+
     const res = await API.get(
       "/api/orders",
       {
@@ -30,6 +35,11 @@ const AdminOrders = () => {
   const updateStatus = async (id, status) => {
     const token = localStorage.getItem("adminToken");
 
+    if (!token) {
+      alert("Admin not logged in");
+      return;
+    }
+
     await API.put(
       `/api/orders/${id}`,
       { status },
@@ -46,7 +56,6 @@ const AdminOrders = () => {
   const statusColor = (status) => {
     if (status === "Delivered") return "#28a745";
     if (status === "Out for Delivery") return "#17a2b8";
-    if (status === "Arrived at Hub") return "#6f42c1";
     if (status === "Shipped") return "#ff9800";
     return "#007bff";
   };
@@ -54,7 +63,6 @@ const AdminOrders = () => {
   const statusFlow = [
     "Placed",
     "Shipped",
-    "Arrived at Hub",
     "Out for Delivery",
     "Delivered",
   ];

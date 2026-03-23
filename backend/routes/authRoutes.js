@@ -69,7 +69,7 @@ router.post("/register", async (req, res) => {
       { upsert: true, new: true }
     );
 
-    res.status(200).json({ message: "OTP sent to your email"});
+    res.status(200).json({ message: "OTP sent to your email" });
 
   } catch (error) {
     console.error("REGISTER ERROR 👉", error);
@@ -127,6 +127,13 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found" });
 
+    // 🚨 BLOCK FULLY DELETED USERS (after 30 days)
+    if (user.deleteScheduledAt && new Date() > user.deleteScheduledAt) {
+      return res.status(400).json({
+        message: "Account deleted. Please signup again.",
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
@@ -142,9 +149,9 @@ router.post("/login", async (req, res) => {
     // console.log("Generated OTP:", loginOtp);
 
     await sendEmail(
-  email,
-  "Login OTP - Thakur Cane Enterprises",
-  `
+      email,
+      "Login OTP - Thakur Cane Enterprises",
+      `
   <div style="font-family: Arial; padding:20px;">
     <h2 style="color:#111;">Login Verification Required 🔐</h2>
 
@@ -168,7 +175,7 @@ router.post("/login", async (req, res) => {
     </p>
   </div>
   `
-);
+    );
 
     res.json({ message: "Email sent successfully" });
 
@@ -189,6 +196,13 @@ router.post("/verify-login-otp", async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
+    // 🚨 BLOCK FULLY DELETED USERS
+    if (user.deleteScheduledAt && new Date() > user.deleteScheduledAt) {
+      return res.status(400).json({
+        message: "Account deleted. Please signup again.",
+      });
+    }
+
     if (!user.loginOtp || user.loginOtp !== String(otp)) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -200,6 +214,14 @@ router.post("/verify-login-otp", async (req, res) => {
     // ✅ Clear OTP
     user.loginOtp = null;
     user.loginOtpExpiry = null;
+
+    // 🔁 CANCEL DELETE REQUEST IF USER LOGINS
+    if (user.deleteRequested) {
+      user.deleteRequested = false;
+      user.deleteRequestedAt = null;
+      user.deleteScheduledAt = null;
+    }
+
     await user.save();
 
     // ✅ GENERATE TOKEN (THIS WAS MISSING)
@@ -324,22 +346,22 @@ router.delete("/delete-address/:id", protect, async (req, res) => {
 
 /* ================= FORGOT PASSWORD ================= */
 
-router.post("/forgot-password", async (req,res)=>{
+router.post("/forgot-password", async (req, res) => {
 
-  try{
+  try {
 
-    const {email} = req.body;
+    const { email } = req.body;
 
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
 
-    if(!user){
-      return res.status(400).json({message:"User not found"});
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
     }
 
-    const otp = Math.floor(100000 + Math.random()*900000).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     user.resetOtp = otp;
-    user.resetOtpExpiry = Date.now() + 10*60*1000;
+    user.resetOtpExpiry = Date.now() + 10 * 60 * 1000;
 
     await user.save();
 
@@ -349,37 +371,37 @@ router.post("/forgot-password", async (req,res)=>{
       `<h2>Your OTP: ${otp}</h2>`
     );
 
-    res.json({message:"OTP sent"});
+    res.json({ message: "OTP sent" });
 
-  }catch{
+  } catch {
 
-    res.status(500).json({message:"Server error"});
+    res.status(500).json({ message: "Server error" });
 
   }
 
 });
 
 
-router.post("/reset-password", async (req,res)=>{
+router.post("/reset-password", async (req, res) => {
 
-  try{
+  try {
 
-    let {email,otp,newPassword} = req.body;
+    let { email, otp, newPassword } = req.body;
 
     otp = otp.toString().trim(); // ✅ FIX
 
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
 
-    if(!user){
-      return res.status(400).json({message:"User not found"});
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
     }
 
-    if(!user.resetOtp || user.resetOtp.toString().trim() !== otp){
-      return res.status(400).json({message:"Invalid OTP"});
+    if (!user.resetOtp || user.resetOtp.toString().trim() !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    if(user.resetOtpExpiry < Date.now()){
-      return res.status(400).json({message:"OTP expired"});
+    if (user.resetOtpExpiry < Date.now()) {
+      return res.status(400).json({ message: "OTP expired" });
     }
 
     user.password = newPassword;
@@ -389,14 +411,79 @@ router.post("/reset-password", async (req,res)=>{
 
     await user.save();
 
-    res.json({message:"Password reset successful"});
+    res.json({ message: "Password reset successful" });
 
-  }catch{
+  } catch {
 
-    res.status(500).json({message:"Server error"});
+    res.status(500).json({ message: "Server error" });
 
   }
 
+});
+
+
+/* ================= REQUEST ACCOUNT DELETE ================= */
+router.post("/request-delete-account", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Already requested
+    if (user.deleteRequested) {
+      return res.json({
+        message: "Delete request already submitted",
+      });
+    }
+
+    const now = new Date();
+
+    user.deleteRequested = true;
+    user.deleteRequestedAt = now;
+
+    // 30 days later
+    user.deleteScheduledAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    await user.save();
+
+    res.json({
+      message:
+        "Your account will be deleted in 30 days if you do not login again.",
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+/* ================= CANCEL DELETE REQUEST ================= */
+router.post("/cancel-delete-account", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // agar request hi nahi hai
+    if (!user.deleteRequested) {
+      return res.json({ message: "No delete request found" });
+    }
+
+    // reset delete fields
+    user.deleteRequested = false;
+    user.deleteRequestedAt = null;
+    user.deleteScheduledAt = null;
+
+    await user.save();
+
+    res.json({ message: "Delete request cancelled successfully" });
+
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
 });
 
 router.get("/create-admin-easy", async (req, res) => {
